@@ -19,9 +19,9 @@ export default function CommandPage({ commands }) {
         </TableRow>
       </TableHead>
       <TableBody>
-        {commands.map((row) => {
+        {commands.map((row, index) => {
           return (
-            <TableRow>
+            <TableRow key={"command" + index}>
               <TableCell>{row.name}</TableCell>
               <TableCell>{row.response}</TableCell>
             </TableRow>
@@ -33,31 +33,32 @@ export default function CommandPage({ commands }) {
 }
 
 export async function getServerSideProps() {
-  const uri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PW}@twitchbot.ljjwk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  await client.connect();
-  // (err) => {
-  //   console.log(err);
-  //   client.close();
-  // }
-  let commands = [];
-  const collection = await client.db("Commands").collection("custom");
-  await collection
-    .find({}, { name: 1, response: 1, id: 0, _id: 0 })
-    .forEach((element) => {
-      commands.push({
-        name: element.name,
-        response: element.response,
-      });
+  try {
+    const uri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PW}@twitchbot.ljjwk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+    const client = new MongoClient(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
+    await client.connect();
 
-  // console.log(await commands.toArray());
-  return {
-    props: {
-      commands: commands,
-    },
-  };
+    let commands = [];
+    const collection = await client.db("Commands").collection("custom");
+    await collection
+      .find({}, { name: 1, response: 1, id: 0, _id: 0 })
+      .forEach((element) => {
+        commands.push({
+          name: element.name,
+          response: element.response,
+        });
+      });
+
+    // console.log(await commands.toArray());
+    return {
+      props: {
+        commands: commands,
+      },
+    };
+  } catch (e) {
+    console.log(e);
+  }
 }
